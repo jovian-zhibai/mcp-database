@@ -1,5 +1,6 @@
 # mcp-database
 
+[![PyPI](https://img.shields.io/pypi/v/mcp-database)](https://pypi.org/project/mcp-database/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-compatible-orange)](https://modelcontextprotocol.io)
@@ -123,7 +124,7 @@ Ask Claude things like:
 ## Development
 
 ```bash
-# Clone and install
+# Clone and install for development
 git clone https://github.com/Jansen003/mcp-database.git
 cd mcp-database
 pip install -e ".[dev]"
