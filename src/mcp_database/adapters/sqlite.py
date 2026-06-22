@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+import threading
 
 from mcp_database.adapters.base import DatabaseAdapter, QueryResult, TableInfo
 
@@ -183,15 +184,24 @@ class SQLiteAdapter(DatabaseAdapter):
             lines.append(f"{r['id']}|{r['parent']}|{r['notused']}|{r['detail']}")
         return "\n".join(lines) if lines else "No plan available."
 
-    def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
+    def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100, timeout: int = 30) -> QueryResult:
         conn = self._get_conn()
-        cursor = conn.execute(sql)
-        columns = [desc[0] for desc in cursor.description] if cursor.description else []
-        all_rows = cursor.fetchall()
-        row_count = len(all_rows)
-        truncated = row_count > max_rows
-        rows = [list(row) for row in all_rows[:max_rows]]
-        return QueryResult(columns=columns, rows=rows, row_count=row_count, truncated=truncated)
+        timer = threading.Timer(timeout, conn.interrupt)
+        timer.start()
+        try:
+            cursor = conn.execute(sql)
+            columns = [desc[0] for desc in cursor.description] if cursor.description else []
+            all_rows = cursor.fetchall()
+            row_count = len(all_rows)
+            truncated = row_count > max_rows
+            rows = [list(row) for row in all_rows[:max_rows]]
+            return QueryResult(columns=columns, rows=rows, row_count=row_count, truncated=truncated)
+        except sqlite3.OperationalError as e:
+            if "interrupted" in str(e).lower():
+                raise RuntimeError(f"Query timed out after {timeout} seconds")
+            raise
+        finally:
+            timer.cancel()
 
     def execute_write(self, sql: str, database: str | None = None) -> int:
         if self.read_only:

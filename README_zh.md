@@ -75,6 +75,7 @@ claude mcp add mcp-database -e MCP_DATABASE_URL=sqlite:///path/to/db.sqlite -- m
 | `MCP_DATABASE_TYPE` | `sqlite` | 数据库类型：`sqlite`、`postgresql`、`mysql` |
 | `MCP_DATABASE_READ_ONLY` | `true` | 是否启用只读模式 |
 | `MCP_MAX_ROWS` | `100` | 单次查询最大返回行数 |
+| `MCP_QUERY_TIMEOUT` | `30` | 查询超时时间（秒） |
 | `MCP_DATABASE_CONFIG` | — | 指向多连接 JSON 配置文件的路径 |
 
 ### 多数据库连接

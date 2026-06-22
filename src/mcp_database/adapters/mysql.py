@@ -254,11 +254,12 @@ class MySQLAdapter(DatabaseAdapter):
             return json.dumps(list(row.values())[0], indent=2, ensure_ascii=False)
         return "No plan available."
 
-    def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
+    def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100, timeout: int = 30) -> QueryResult:
         conn = self._get_conn()
         cur = conn.cursor()
         if database:
             cur.execute(f"USE `{database}`")
+        cur.execute(f"SET MAX_EXECUTION_TIME = {timeout * 1000}")
         cur.execute(sql)
         columns = [desc[0] for desc in cur.description] if cur.description else []
         all_rows = cur.fetchall()
