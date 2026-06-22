@@ -206,6 +206,43 @@ class MySQLAdapter(DatabaseAdapter):
             for r in rows
         ]
 
+    def get_health(self) -> dict:
+        import time
+
+        conn = self._get_conn()
+        cur = conn.cursor()
+        start = time.monotonic()
+        cur.execute("SELECT 1")
+        latency = (time.monotonic() - start) * 1000
+
+        tables = self.list_tables()
+        tables_count = len(tables)
+        total_rows = 0
+        largest_tables: list[dict] = []
+
+        for table in tables:
+            cur.execute(f"SELECT COUNT(*) FROM `{table}`")
+            row = cur.fetchone()
+            rows = list(row.values())[0] if isinstance(row, dict) else row[0]
+            total_rows += rows
+            largest_tables.append({"name": table, "rows": rows})
+
+        cur.close()
+
+        # Sort by rows descending, take top 5
+        largest_tables.sort(key=lambda x: x["rows"], reverse=True)
+        for entry in largest_tables[:5]:
+            entry["estimated_size"] = f"{entry['rows'] * 1.0:.1f} KB"  # rough estimate
+
+        return {
+            "status": "healthy",
+            "database_type": self.db_type,
+            "tables_count": tables_count,
+            "total_rows": total_rows,
+            "largest_tables": largest_tables[:5],
+            "connection_latency_ms": round(latency, 2),
+        }
+
     def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
         conn = self._get_conn()
         cur = conn.cursor()

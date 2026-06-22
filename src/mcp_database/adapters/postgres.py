@@ -229,6 +229,50 @@ class PostgreSQLAdapter(DatabaseAdapter):
             for r in rows
         ]
 
+    def get_health(self) -> dict:
+        import time
+
+        conn = self._get_conn()
+        cur = conn.cursor()
+        start = time.monotonic()
+        cur.execute("SELECT 1")
+        latency = (time.monotonic() - start) * 1000
+
+        tables = self.list_tables()
+        tables_count = len(tables)
+        total_rows = 0
+        largest_tables: list[dict] = []
+
+        for table in tables:
+            cur.execute(f"SELECT COUNT(*) FROM \"{table}\"")
+            rows = cur.fetchone()[0]
+            total_rows += rows
+            # Get estimated size
+            cur.execute(
+                "SELECT pg_total_relation_size(%s::regclass)", (table,)
+            )
+            size = cur.fetchone()[0] or 0
+            largest_tables.append({"name": table, "rows": rows, "estimated_size_bytes": size})
+
+        cur.close()
+
+        # Sort by rows descending, take top 5
+        largest_tables.sort(key=lambda x: x["rows"], reverse=True)
+        for entry in largest_tables:
+            size_bytes = entry.pop("estimated_size_bytes")
+            entry["estimated_size"] = f"{size_bytes / 1024:.1f} KB"
+
+        largest_tables = largest_tables[:5]
+
+        return {
+            "status": "healthy",
+            "database_type": self.db_type,
+            "tables_count": tables_count,
+            "total_rows": total_rows,
+            "largest_tables": largest_tables,
+            "connection_latency_ms": round(latency, 2),
+        }
+
     def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
         conn = self._get_conn()
         cur = conn.cursor()
