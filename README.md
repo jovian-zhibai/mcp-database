@@ -1,6 +1,7 @@
 # mcp-database
 
 [![PyPI](https://img.shields.io/pypi/v/mcp-database)](https://pypi.org/project/mcp-database/)
+[![CI](https://github.com/jovian-zhibai/mcp-database/actions/workflows/ci.yml/badge.svg)](https://github.com/jovian-zhibai/mcp-database/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-compatible-orange)](https://modelcontextprotocol.io)
