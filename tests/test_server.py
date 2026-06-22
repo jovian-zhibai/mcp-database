@@ -18,6 +18,7 @@ REQUIRED_TOOLS = {
     "check_health",
     "generate_er_diagram",
     "explain_query",
+    "diagnose_connection",
 }
 
 
@@ -86,11 +87,16 @@ def server_instance():
         """Explain query."""
         return "ok"
 
+    @server.tool()
+    def diagnose_connection(connection_name: str = "default") -> str:
+        """Diagnose connection."""
+        return "ok"
+
     return server
 
 
 class TestToolRegistration:
-    """Verify that all 12 expected tools are registered on a fresh server instance."""
+    """Verify that all 13 expected tools are registered on a fresh server instance."""
 
     async def test_all_tools_registered(self, server_instance):
         tools = await server_instance.list_tools()
@@ -100,7 +106,7 @@ class TestToolRegistration:
 
     async def test_exact_tool_count(self, server_instance):
         tools = await server_instance.list_tools()
-        assert len(tools) == 12, f"Expected 12 tools, got {len(tools)}: {[t.name for t in tools]}"
+        assert len(tools) == 13, f"Expected 13 tools, got {len(tools)}: {[t.name for t in tools]}"
 
     async def test_list_databases_present(self, server_instance):
         tools = await server_instance.list_tools()

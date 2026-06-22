@@ -360,6 +360,22 @@ def explain_query(
     return adapter.explain(query.strip().rstrip(";"))
 
 
+@mcp.tool()
+def diagnose_connection(
+    connection_name: str = "default",
+    ctx: Context = None,
+) -> str:
+    """Diagnose a database connection with detailed status and troubleshooting hints.
+
+    Args:
+        connection_name: Name of the database connection (default: "default").
+    """
+    adapter = _get_adapter(ctx, connection_name)
+    result = adapter.diagnose_connection()
+    result["connection_name"] = connection_name
+    return json.dumps(result, indent=2, ensure_ascii=False)
+
+
 # ---------------------------------------------------------------------------
 # Resources
 # ---------------------------------------------------------------------------
@@ -378,6 +394,26 @@ def resource_databases(ctx: Context) -> str:
         else:
             lines.append(f"- {conn['name']} — {conn['status']}: {conn.get('error', 'unknown')}")
     return "\n".join(lines)
+
+
+AUDIT_SCHEMA_SQL = """CREATE TABLE mergewall_audit (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    repo TEXT NOT NULL,
+    pr_number INTEGER,
+    merge_decision TEXT NOT NULL,
+    risk_score INTEGER NOT NULL,
+    finding_count INTEGER NOT NULL,
+    findings_json TEXT,
+    policy_config TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);"""
+
+
+@mcp.resource("db://mergewall_audit_schema")
+def resource_mergewall_audit_schema() -> str:
+    """Return the suggested Mergewall audit table schema."""
+    return AUDIT_SCHEMA_SQL
 
 
 # ---------------------------------------------------------------------------
