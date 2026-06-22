@@ -175,6 +175,14 @@ class SQLiteAdapter(DatabaseAdapter):
             "connection_latency_ms": round(latency, 2),
         }
 
+    def explain(self, query: str) -> str:
+        conn = self._get_conn()
+        rows = conn.execute(f"EXPLAIN QUERY PLAN {query}").fetchall()
+        lines = []
+        for r in rows:
+            lines.append(f"{r['id']}|{r['parent']}|{r['notused']}|{r['detail']}")
+        return "\n".join(lines) if lines else "No plan available."
+
     def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
         conn = self._get_conn()
         cursor = conn.execute(sql)

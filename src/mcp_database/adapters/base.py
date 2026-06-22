@@ -115,6 +115,14 @@ class DatabaseAdapter(ABC):
         """
 
     @abstractmethod
+    def explain(self, query: str) -> str:
+        """Explain the execution plan for a SQL query.
+
+        For SELECT / WITH...SELECT statements only.
+        Returns the database's query plan as formatted text.
+        """
+
+    @abstractmethod
     def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
         """Execute a read-only SQL query."""
 

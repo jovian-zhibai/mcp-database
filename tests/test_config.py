@@ -1,12 +1,10 @@
 """Tests for config.py — environment variable parsing and defaults."""
 
-import os
 
 import pytest
 
 from mcp_database.config import (
     DatabaseConfig,
-    ServerConfig,
     load_config_from_dict,
     load_config_from_env,
     _parse_url_to_config,
