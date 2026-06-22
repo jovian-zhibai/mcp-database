@@ -71,6 +71,44 @@ claude mcp add mcp-database -e MCP_DATABASE_URL=sqlite:///path/to/db.sqlite -- m
 }
 ```
 
+### 接入 Cursor
+
+在 Cursor 的 MCP 设置（Settings → MCP）中添加：
+
+```json
+{
+  "mcpServers": {
+    "database": {
+      "command": "mcp-database",
+      "env": {
+        "MCP_DATABASE_URL": "sqlite:///path/to/your.db"
+      }
+    }
+  }
+}
+```
+
+### 接入 Windsurf
+
+添加到 `~/.codeium/windsurf/mcp_config.json`：
+
+```json
+{
+  "mcpServers": {
+    "database": {
+      "command": "mcp-database",
+      "env": {
+        "MCP_DATABASE_URL": "sqlite:///path/to/your.db"
+      }
+    }
+  }
+}
+```
+
+### 其他支持 MCP 的工具
+
+mcp-database 适用于任何支持 MCP 协议的工具。配置方式一致：指向 `mcp-database` 命令并设置 `MCP_DATABASE_URL`。
+
 ## 支持的数据库
 
 | 数据库 | 状态 | 安装方式 |
@@ -78,6 +116,7 @@ claude mcp add mcp-database -e MCP_DATABASE_URL=sqlite:///path/to/db.sqlite -- m
 | **SQLite** | 内置 | `pip install mcp-database` |
 | **PostgreSQL** | 可选 | `pip install 'mcp-database[postgres]'` |
 | **MySQL** | 可选 | `pip install 'mcp-database[mysql]'` |
+| **MongoDB** | 预览 | `pip install 'mcp-database[mongodb]'` |
 | **全部** | 可选 | `pip install 'mcp-database[all]'` |
 
 ## 配置方式
@@ -148,6 +187,7 @@ MCP_DATABASE_TYPE=mysql
 | `check_health` | 获取数据库健康指标（表数量、行数、延迟） |
 | `generate_er_diagram` | 从数据库结构生成 Mermaid ER 图 |
 | `explain_query` | 解释 SELECT 查询的执行计划 |
+| `diagnose_connection` | 诊断连接问题并提供排障提示 |
 
 ## 使用示例
 
@@ -171,6 +211,21 @@ MCP_DATABASE_TYPE=mysql
 - **查询超时** —— 可配置超时（默认 30 秒），防止慢查询阻塞
 - **数据脱敏** —— 可通过 `MCP_MASK_SENSITIVE=true` 脱敏邮箱、手机号等敏感字段
 
+## 与 Mergewall 集成
+
+将 mcp-database 作为 [Mergewall](https://github.com/jovian-zhibai/Mergewall) 审计数据的存储后端：
+
+```bash
+# 1. 创建审计数据库
+MCP_DATABASE_URL=sqlite:///mergewall-audit.db mcp-database
+
+# 2. 让 Claude 帮忙："使用 schema 资源创建 mergewall_audit 表"
+# 3. 配置 Mergewall 导出审计数据
+#    （详见 Mergewall 文档中的数据库导出配置）
+```
+
+这样就能用 SQL 查询治理历史，而不仅仅是 JSONL 文件。
+
 ## 开发
 
 ```bash
@@ -184,22 +239,6 @@ pytest
 
 # 使用 Inspector 调试
 mcp dev src/mcp_database/server.py
-```
-
-## 项目结构
-
-```
-src/mcp_database/
-  __init__.py          # 版本信息
-  server.py            # MCP 服务器主入口（8 个工具）
-  config.py            # 配置加载（环境变量、URL 解析）
-  adapters/
-    base.py            # 适配器基类（DatabaseAdapter）
-    sqlite.py          # SQLite 适配器
-    postgres.py        # PostgreSQL 适配器
-    mysql.py           # MySQL 适配器
-tests/
-  test_sqlite_adapter.py  # SQLite 适配器测试（17 个用例）
 ```
 
 ## 许可证
