@@ -73,6 +73,27 @@ Add to your `claude_desktop_config.json`:
 | `MCP_DATABASE_TYPE` | `sqlite` | Database type: `sqlite`, `postgresql`, `mysql` |
 | `MCP_DATABASE_READ_ONLY` | `true` | Enable read-only mode |
 | `MCP_MAX_ROWS` | `100` | Maximum rows returned per query |
+| `MCP_DATABASE_CONFIG` | — | Path to JSON config file for multiple connections |
+
+### Multiple Connections
+
+To connect to multiple databases simultaneously, create a JSON config file:
+
+```json
+{
+  "connections": {
+    "prod": {"url": "postgres://user:pass@host:5432/db", "read_only": true},
+    "staging": {"url": "postgres://user:pass@host:5432/staging", "read_only": true},
+    "local": {"url": "sqlite:///dev.db", "read_only": false}
+  },
+  "settings": {
+    "max_rows": 100,
+    "allow_writes": false
+  }
+}
+```
+
+Set `MCP_DATABASE_CONFIG` to the file path. All tools accept an optional `connection_name` parameter (defaults to `"default"`).
 
 ### Connection URLs
 
@@ -104,6 +125,9 @@ Once connected, Claude can use these tools:
 | `execute` | Execute a write statement (INSERT, UPDATE, DELETE) — opt-in only |
 | `sample_rows` | Get sample rows from a table |
 | `search_tables` | Search for tables or columns by keyword |
+| `schema_diff` | Compare schemas between two database connections |
+| `check_health` | Get database health metrics (table count, row counts, latency) |
+| `generate_er_diagram` | Generate Mermaid ER diagram from database schema |
 
 ## Examples
 
@@ -114,6 +138,9 @@ Ask Claude things like:
 - "Query the top 10 orders by amount"
 - "Find all columns related to 'email'"
 - "Sample some rows from the products table"
+- "Compare schemas between staging and production"
+- "Generate an ER diagram for my database"
+- "How large are my tables?"
 
 ## Security
 
@@ -126,7 +153,7 @@ Ask Claude things like:
 
 ```bash
 # Clone and install for development
-git clone https://github.com/Jansen003/mcp-database.git
+git clone https://github.com/jovian-zhibai/mcp-database.git
 cd mcp-database
 pip install -e ".[dev]"
 

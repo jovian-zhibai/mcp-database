@@ -1,6 +1,7 @@
 # mcp-database
 
 [![PyPI](https://img.shields.io/pypi/v/mcp-database)](https://pypi.org/project/mcp-database/)
+[![CI](https://github.com/jovian-zhibai/mcp-database/actions/workflows/ci.yml/badge.svg)](https://github.com/jovian-zhibai/mcp-database/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-compatible-orange)](https://modelcontextprotocol.io)
@@ -74,6 +75,27 @@ claude mcp add mcp-database -e MCP_DATABASE_URL=sqlite:///path/to/db.sqlite -- m
 | `MCP_DATABASE_TYPE` | `sqlite` | 数据库类型：`sqlite`、`postgresql`、`mysql` |
 | `MCP_DATABASE_READ_ONLY` | `true` | 是否启用只读模式 |
 | `MCP_MAX_ROWS` | `100` | 单次查询最大返回行数 |
+| `MCP_DATABASE_CONFIG` | — | 指向多连接 JSON 配置文件的路径 |
+
+### 多数据库连接
+
+要同时连接多个数据库，创建一个 JSON 配置文件：
+
+```json
+{
+  "connections": {
+    "prod": {"url": "postgres://user:pass@host:5432/db", "read_only": true},
+    "staging": {"url": "postgres://user:pass@host:5432/staging", "read_only": true},
+    "local": {"url": "sqlite:///dev.db", "read_only": false}
+  },
+  "settings": {
+    "max_rows": 100,
+    "allow_writes": false
+  }
+}
+```
+
+设置 `MCP_DATABASE_CONFIG` 环境变量指向此文件。所有工具都接受可选的 `connection_name` 参数（默认为 `"default"`）。
 
 ### 连接地址格式
 
@@ -105,6 +127,9 @@ MCP_DATABASE_TYPE=mysql
 | `execute` | 执行写入语句（INSERT、UPDATE、DELETE）—— 需手动开启 |
 | `sample_rows` | 获取表中的示例数据 |
 | `search_tables` | 按关键词搜索表名和列名 |
+| `schema_diff` | 比较两个数据库连接之间的表结构差异 |
+| `check_health` | 获取数据库健康指标（表数量、行数、延迟） |
+| `generate_er_diagram` | 从数据库结构生成 Mermaid ER 图 |
 
 ## 使用示例
 
@@ -115,6 +140,9 @@ MCP_DATABASE_TYPE=mysql
 - "查询金额最大的 10 笔订单"
 - "找一下所有跟 email 相关的字段"
 - "看看 products 表里长什么样"
+- "比较 staging 和生产环境的表结构"
+- "为我的数据库生成 ER 图"
+- "我的表有多大？"
 
 ## 安全设计
 
@@ -127,7 +155,7 @@ MCP_DATABASE_TYPE=mysql
 
 ```bash
 # 克隆仓库用于开发
-git clone https://github.com/Jansen003/mcp-database.git
+git clone https://github.com/jovian-zhibai/mcp-database.git
 cd mcp-database
 pip install -e ".[dev]"
 
