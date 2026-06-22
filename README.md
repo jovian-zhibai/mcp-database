@@ -74,6 +74,7 @@ Add to your `claude_desktop_config.json`:
 | `MCP_DATABASE_READ_ONLY` | `true` | Enable read-only mode |
 | `MCP_MAX_ROWS` | `100` | Maximum rows returned per query |
 | `MCP_QUERY_TIMEOUT` | `30` | Query timeout in seconds |
+| `MCP_MASK_SENSITIVE` | `false` | Mask sensitive columns (email, phone, token, etc.) |
 | `MCP_DATABASE_CONFIG` | — | Path to JSON config file for multiple connections |
 
 ### Multiple Connections
@@ -150,6 +151,8 @@ Ask Claude things like:
 - **Write opt-in** — set `allow_writes=True` and `MCP_DATABASE_READ_ONLY=false` to enable
 - **Read-only detection** — write tool rejects SELECT statements (use `query` instead)
 - **Row limits** — configurable max rows to prevent accidental large result sets
+- **Query timeout** — configurable timeout (default 30s) to prevent slow queries from blocking
+- **Data masking** — optionally mask sensitive columns (emails, phones, tokens) with `MCP_MASK_SENSITIVE=true`
 
 ## Development
 

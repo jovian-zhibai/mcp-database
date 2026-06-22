@@ -76,6 +76,7 @@ claude mcp add mcp-database -e MCP_DATABASE_URL=sqlite:///path/to/db.sqlite -- m
 | `MCP_DATABASE_READ_ONLY` | `true` | 是否启用只读模式 |
 | `MCP_MAX_ROWS` | `100` | 单次查询最大返回行数 |
 | `MCP_QUERY_TIMEOUT` | `30` | 查询超时时间（秒） |
+| `MCP_MASK_SENSITIVE` | `false` | 脱敏敏感字段（邮箱、手机号、令牌等） |
 | `MCP_DATABASE_CONFIG` | — | 指向多连接 JSON 配置文件的路径 |
 
 ### 多数据库连接
@@ -152,6 +153,8 @@ MCP_DATABASE_TYPE=mysql
 - **写入需授权** —— 必须设置 `allow_writes=True` 和 `MCP_DATABASE_READ_ONLY=false`
 - **语句检测** —— 写入工具会拒绝 SELECT 语句（应该用 `query`）
 - **行数限制** —— 可配置最大返回行数，防止意外拉取全表
+- **查询超时** —— 可配置超时（默认 30 秒），防止慢查询阻塞
+- **数据脱敏** —— 可通过 `MCP_MASK_SENSITIVE=true` 脱敏邮箱、手机号等敏感字段
 
 ## 开发
 
