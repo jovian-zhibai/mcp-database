@@ -98,8 +98,11 @@ class ConnectionManager:
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"Config file not found: {config_path}")
 
-        with open(config_path, "r") as f:
-            data = json.load(f)
+        try:
+            with open(config_path, "r") as f:
+                data = json.load(f)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON in config file '{config_path}': {e}")
 
         settings = data.get("settings", {})
         self.global_max_rows = settings.get("max_rows", 100)
@@ -109,6 +112,9 @@ class ConnectionManager:
 
         connections = data.get("connections", {})
         for name, conn_data in connections.items():
+            if "url" not in conn_data:
+                logger.warning("Skipping connection '%s': missing 'url' field", name)
+                continue
             url = conn_data["url"]
             read_only = conn_data.get("read_only", True)
             max_rows = conn_data.get("max_rows")

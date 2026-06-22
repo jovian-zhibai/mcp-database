@@ -53,8 +53,20 @@ def load_config_from_env() -> ServerConfig:
     db_url = os.environ.get("MCP_DATABASE_URL", "")
     db_type = os.environ.get("MCP_DATABASE_TYPE", "sqlite")
     read_only = os.environ.get("MCP_DATABASE_READ_ONLY", "true").lower() in ("true", "1", "yes")
-    max_rows = int(os.environ.get("MCP_MAX_ROWS", "100"))
-    query_timeout = int(os.environ.get("MCP_QUERY_TIMEOUT", "30"))
+
+    def _int_env(key: str, default: int) -> int:
+        val = os.environ.get(key, "")
+        if not val:
+            return default
+        try:
+            return int(val)
+        except ValueError:
+            logger = __import__("logging").getLogger(__name__)
+            logger.warning("Invalid value for %s: '%s', using default %d", key, val, default)
+            return default
+
+    max_rows = _int_env("MCP_MAX_ROWS", 100)
+    query_timeout = _int_env("MCP_QUERY_TIMEOUT", 30)
     mask_sensitive = os.environ.get("MCP_MASK_SENSITIVE", "false").lower() in ("true", "1", "yes")
 
     if db_url:

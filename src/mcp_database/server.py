@@ -58,9 +58,17 @@ mcp = FastMCP(
 
 
 def _get_adapter(ctx: Context, connection_name: str = "default") -> DatabaseAdapter:
-    """Get a database adapter by connection name."""
+    """Get a database adapter by connection name.
+
+    Raises ValueError with user-friendly message if connection is unavailable.
+    """
     app_ctx: AppContext = ctx.request_context.lifespan_context
-    return app_ctx.connection_manager.get(connection_name)
+    try:
+        return app_ctx.connection_manager.get(connection_name)
+    except ValueError:
+        raise
+    except Exception as e:
+        raise ValueError(f"Database connection error: {e}")
 
 
 def _get_manager(ctx: Context) -> ConnectionManager:
