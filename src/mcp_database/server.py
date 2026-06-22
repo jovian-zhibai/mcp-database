@@ -95,7 +95,6 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
 
 mcp = FastMCP(
     "Database Server",
-    version="0.1.0",
     lifespan=app_lifespan,
 )
 
