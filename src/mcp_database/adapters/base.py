@@ -123,7 +123,7 @@ class DatabaseAdapter(ABC):
         """
 
     @abstractmethod
-    def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
+    def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100, timeout: int = 30) -> QueryResult:
         """Execute a read-only SQL query."""
 
     def execute_write(self, sql: str, database: str | None = None) -> int:

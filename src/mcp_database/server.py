@@ -174,7 +174,11 @@ def query(
     cm = _get_manager(ctx)
     max_rows = min(max_rows, cm.global_max_rows)
 
-    result = adapter.execute_query(sql, database=database, max_rows=max_rows)
+    try:
+        result = adapter.execute_query(sql, database=database, max_rows=max_rows, timeout=cm.query_timeout)
+    except RuntimeError as e:
+        return f"Error: {e}"
+
     return result.to_table(max_rows=max_rows)
 
 
@@ -222,8 +226,12 @@ def sample_rows(
         connection_name: Name of the database connection (default: "default").
     """
     adapter = _get_adapter(ctx, connection_name)
+    cm = _get_manager(ctx)
     limit = min(limit, 20)
-    result = adapter.execute_query(f"SELECT * FROM \"{table}\" LIMIT {limit}", max_rows=limit)
+    try:
+        result = adapter.execute_query(f"SELECT * FROM \"{table}\" LIMIT {limit}", max_rows=limit, timeout=cm.query_timeout)
+    except RuntimeError as e:
+        return f"Error: {e}"
     return result.to_table(max_rows=limit)
 
 

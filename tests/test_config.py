@@ -127,6 +127,22 @@ class TestLoadConfigFromEnv:
         cfg = load_config_from_env()
         assert cfg.max_rows == 100
 
+    def test_query_timeout_env(self, monkeypatch):
+        monkeypatch.setenv("MCP_DATABASE_URL", "sqlite:///test.db")
+        monkeypatch.setenv("MCP_DATABASE_TYPE", "sqlite")
+        monkeypatch.setenv("MCP_QUERY_TIMEOUT", "15")
+
+        cfg = load_config_from_env()
+        assert cfg.query_timeout == 15
+
+    def test_query_timeout_default(self, monkeypatch):
+        monkeypatch.delenv("MCP_QUERY_TIMEOUT", raising=False)
+        monkeypatch.setenv("MCP_DATABASE_URL", "sqlite:///test.db")
+        monkeypatch.setenv("MCP_DATABASE_TYPE", "sqlite")
+
+        cfg = load_config_from_env()
+        assert cfg.query_timeout == 30
+
 
 class TestLoadConfigFromDict:
     def test_single_database(self):

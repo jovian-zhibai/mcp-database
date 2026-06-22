@@ -284,9 +284,10 @@ class PostgreSQLAdapter(DatabaseAdapter):
             return json.dumps(rows[0][0], indent=2, ensure_ascii=False)
         return "No plan available."
 
-    def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
+    def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100, timeout: int = 30) -> QueryResult:
         conn = self._get_conn()
         cur = conn.cursor()
+        cur.execute(f"SET statement_timeout = '{timeout}s'")
         cur.execute(sql)
         columns = [desc[0] for desc in cur.description] if cur.description else []
         all_rows = cur.fetchall()

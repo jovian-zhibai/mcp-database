@@ -73,6 +73,7 @@ Add to your `claude_desktop_config.json`:
 | `MCP_DATABASE_TYPE` | `sqlite` | Database type: `sqlite`, `postgresql`, `mysql` |
 | `MCP_DATABASE_READ_ONLY` | `true` | Enable read-only mode |
 | `MCP_MAX_ROWS` | `100` | Maximum rows returned per query |
+| `MCP_QUERY_TIMEOUT` | `30` | Query timeout in seconds |
 | `MCP_DATABASE_CONFIG` | — | Path to JSON config file for multiple connections |
 
 ### Multiple Connections
