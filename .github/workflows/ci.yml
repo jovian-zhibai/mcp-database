@@ -26,6 +26,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
+      - name: Verify installation
+        run: |
+          python -c "import mcp_database; print('mcp-database', mcp_database.__version__)"
+          python -c "import pytest; print('pytest', pytest.__version__)"
+
       - name: Run tests
         run: pytest tests/ -v
 

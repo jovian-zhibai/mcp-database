@@ -36,6 +36,7 @@ all = ["mcp-database[postgres,mysql]"]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
+    "anyio>=4.0",
     "ruff>=0.4.0",
 ]
 

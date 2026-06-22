@@ -84,7 +84,7 @@ def server_instance():
 
 
 class TestToolRegistration:
-    """Verify that all 8 expected tools are registered."""
+    """Verify that all 11 expected tools are registered on a fresh server instance."""
 
     @pytest.mark.anyio
     async def test_all_tools_registered(self, server_instance):
@@ -99,65 +99,63 @@ class TestToolRegistration:
         assert len(tools) == 11, f"Expected 11 tools, got {len(tools)}: {[t.name for t in tools]}"
 
     @pytest.mark.anyio
-    async def test_list_databases_has_schema(self, server_instance):
+    async def test_list_databases_present(self, server_instance):
         tools = await server_instance.list_tools()
-        tool = next(t for t in tools if t.name == "list_databases")
-        assert tool.name == "list_databases"
+        assert any(t.name == "list_databases" for t in tools)
 
     @pytest.mark.anyio
-    async def test_list_tables_has_database_param(self, server_instance):
+    async def test_list_tables_present(self, server_instance):
         tools = await server_instance.list_tools()
-        tool = next(t for t in tools if t.name == "list_tables")
-        assert tool.name == "list_tables"
+        assert any(t.name == "list_tables" for t in tools)
 
     @pytest.mark.anyio
-    async def test_query_has_max_rows_param(self, server_instance):
+    async def test_query_present(self, server_instance):
         tools = await server_instance.list_tools()
-        tool = next(t for t in tools if t.name == "query")
-        assert tool.name == "query"
+        assert any(t.name == "query" for t in tools)
 
     @pytest.mark.anyio
-    async def test_execute_has_sql_param(self, server_instance):
+    async def test_execute_present(self, server_instance):
         tools = await server_instance.list_tools()
-        tool = next(t for t in tools if t.name == "execute")
-        assert tool.name == "execute"
+        assert any(t.name == "execute" for t in tools)
 
     @pytest.mark.anyio
-    async def test_sample_rows_has_table_param(self, server_instance):
+    async def test_sample_rows_present(self, server_instance):
         tools = await server_instance.list_tools()
-        tool = next(t for t in tools if t.name == "sample_rows")
-        assert tool.name == "sample_rows"
+        assert any(t.name == "sample_rows" for t in tools)
 
     @pytest.mark.anyio
-    async def test_search_tables_has_keyword_param(self, server_instance):
+    async def test_search_tables_present(self, server_instance):
         tools = await server_instance.list_tools()
-        tool = next(t for t in tools if t.name == "search_tables")
-        assert tool.name == "search_tables"
+        assert any(t.name == "search_tables" for t in tools)
 
     @pytest.mark.anyio
-    async def test_schema_diff_registered(self, server_instance):
+    async def test_schema_diff_present(self, server_instance):
         tools = await server_instance.list_tools()
-        tool = next(t for t in tools if t.name == "schema_diff")
-        assert tool.name == "schema_diff"
+        assert any(t.name == "schema_diff" for t in tools)
+
+    @pytest.mark.anyio
+    async def test_check_health_present(self, server_instance):
+        tools = await server_instance.list_tools()
+        assert any(t.name == "check_health" for t in tools)
+
+    @pytest.mark.anyio
+    async def test_generate_er_diagram_present(self, server_instance):
+        tools = await server_instance.list_tools()
+        assert any(t.name == "generate_er_diagram" for t in tools)
 
 
-class TestServerModuleImports:
-    """Verify the server module imports without error."""
+class TestServerModuleImport:
+    """Verify the real server module can be imported cleanly (once)."""
 
     def test_can_import_server_module(self):
-        """server.py should be importable after our version fix."""
-        import importlib
-        import mcp_database.server
-        importlib.reload(mcp_database.server)
+        """server.py should import without error."""
         from mcp_database.server import mcp as actual_mcp
         assert actual_mcp is not None
+        assert actual_mcp.name == "Database Server"
 
     @pytest.mark.anyio
-    async def test_actual_server_tools(self):
-        """Verify the actual server registers all 8 tools."""
-        import importlib
-        import mcp_database.server
-        importlib.reload(mcp_database.server)
+    async def test_actual_server_tools_match_expected(self):
+        """Verify the real server registers exactly the 11 expected tools."""
         from mcp_database.server import mcp as actual_mcp
 
         tools = await actual_mcp.list_tools()
