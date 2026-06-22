@@ -17,6 +17,21 @@
 | Worried about accidental writes | Read-only by default, writes opt-in |
 | Don't know the schema | Built-in schema inspection, table info, search |
 
+## Why mcp-database? (vs alternatives)
+
+| Feature | mcp-database | @modelcontextprotocol/sqlite | Other MCP DB Servers |
+|---------|:-----------:|:----------------------------:|:--------------------:|
+| Multi-database (SQLite + PG + MySQL) | ✅ | ❌ SQLite only | Varies |
+| Multi-connection | ✅ | ❌ | ❌ |
+| Schema diff | ✅ | ❌ | ❌ |
+| ER diagram (Mermaid) | ✅ | ❌ | ❌ |
+| Health check | ✅ | ❌ | ❌ |
+| Explain query | ✅ | ❌ | ❌ |
+| Data masking | ✅ | ❌ | ❌ |
+| Query timeout | ✅ | ❌ | ❌ |
+| Read-only default | ✅ | ✅ | Varies |
+| Pure Python | ✅ | ❌ (TypeScript) | Varies |
+
 ## Quick Start
 
 ```bash
