@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sqlite3
-from typing import Any
 
 from mcp_database.adapters.base import DatabaseAdapter, QueryResult, TableInfo
 
@@ -74,7 +73,6 @@ class SQLiteAdapter(DatabaseAdapter):
         return TableInfo(name=table, columns=columns, row_count=row_count, create_sql=create_sql)
 
     def get_schema(self, database: str | None = None) -> str:
-        conn = self._get_conn()
         tables = self.list_tables()
         parts = []
         for table in tables:
