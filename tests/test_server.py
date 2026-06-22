@@ -16,6 +16,7 @@ REQUIRED_TOOLS = {
     "search_tables",
     "schema_diff",
     "check_health",
+    "generate_er_diagram",
 }
 
 
@@ -74,6 +75,11 @@ def server_instance():
         """Health check."""
         return "ok"
 
+    @server.tool()
+    def generate_er_diagram(connection_name: str = "default", format: str = "mermaid") -> str:
+        """ER diagram."""
+        return "ok"
+
     return server
 
 
@@ -90,7 +96,7 @@ class TestToolRegistration:
     @pytest.mark.anyio
     async def test_exact_tool_count(self, server_instance):
         tools = await server_instance.list_tools()
-        assert len(tools) == 10, f"Expected 10 tools, got {len(tools)}: {[t.name for t in tools]}"
+        assert len(tools) == 11, f"Expected 11 tools, got {len(tools)}: {[t.name for t in tools]}"
 
     @pytest.mark.anyio
     async def test_list_databases_has_schema(self, server_instance):

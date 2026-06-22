@@ -16,6 +16,7 @@ from mcp.server.fastmcp import Context, FastMCP
 
 from mcp_database.adapters.base import DatabaseAdapter
 from mcp_database.connection_manager import ConnectionManager
+from mcp_database.er_diagram import generate_er_diagram as _generate_er_diagram
 from mcp_database.schema_diff import diff_schemas
 
 logger = logging.getLogger(__name__)
@@ -296,6 +297,22 @@ def check_health(
     result = adapter.get_health()
     result["connection_name"] = connection_name
     return json.dumps(result, indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def generate_er_diagram(
+    connection_name: str = "default",
+    format: str = "mermaid",
+    ctx: Context = None,
+) -> str:
+    """Generate an ER (Entity-Relationship) diagram in Mermaid format.
+
+    Args:
+        connection_name: Name of the database connection (default: "default").
+        format: Output format. Currently only 'mermaid' is supported.
+    """
+    adapter = _get_adapter(ctx, connection_name)
+    return _generate_er_diagram(adapter, format=format)
 
 
 # ---------------------------------------------------------------------------
