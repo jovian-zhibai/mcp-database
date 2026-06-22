@@ -9,6 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
@@ -29,10 +30,10 @@ jobs:
       - name: Verify installation
         run: |
           python -c "import mcp_database; print('mcp-database', mcp_database.__version__)"
-          python -c "import pytest; print('pytest', pytest.__version__)"
+          python -c "import pytest, ruff; print('pytest', pytest.__version__, 'ruff', ruff.__version__)"
 
       - name: Run tests
-        run: pytest tests/ -v
+        run: pytest tests/ -v --tb=short --timeout=60
 
       - name: Lint with ruff
         run: ruff check src/ tests/
