@@ -46,6 +46,7 @@ class ConnectionManager:
         self.global_max_rows: int = 100
         self.allow_writes: bool = False
         self.query_timeout: int = 30
+        self.mask_sensitive: bool = False
 
     # ------------------------------------------------------------------
     # Loading
@@ -68,6 +69,7 @@ class ConnectionManager:
         self.global_max_rows = server_cfg.max_rows
         self.allow_writes = server_cfg.allow_writes
         self.query_timeout = server_cfg.query_timeout
+        self.mask_sensitive = server_cfg.mask_sensitive
 
         for db_cfg in server_cfg.databases:
             name = db_cfg.name
@@ -103,6 +105,7 @@ class ConnectionManager:
         self.global_max_rows = settings.get("max_rows", 100)
         self.allow_writes = settings.get("allow_writes", False)
         self.query_timeout = settings.get("query_timeout", 30)
+        self.mask_sensitive = settings.get("mask_sensitive", False)
 
         connections = data.get("connections", {})
         for name, conn_data in connections.items():

@@ -17,6 +17,7 @@ from mcp.server.fastmcp import Context, FastMCP
 from mcp_database.adapters.base import DatabaseAdapter
 from mcp_database.connection_manager import ConnectionManager
 from mcp_database.er_diagram import generate_er_diagram as _generate_er_diagram
+from mcp_database.masking import mask_sensitive_columns
 from mcp_database.schema_diff import diff_schemas
 
 logger = logging.getLogger(__name__)
@@ -179,6 +180,9 @@ def query(
     except RuntimeError as e:
         return f"Error: {e}"
 
+    if cm.mask_sensitive:
+        result.rows = mask_sensitive_columns(result.columns, result.rows)
+
     return result.to_table(max_rows=max_rows)
 
 
@@ -232,6 +236,10 @@ def sample_rows(
         result = adapter.execute_query(f"SELECT * FROM \"{table}\" LIMIT {limit}", max_rows=limit, timeout=cm.query_timeout)
     except RuntimeError as e:
         return f"Error: {e}"
+
+    if cm.mask_sensitive:
+        result.rows = mask_sensitive_columns(result.columns, result.rows)
+
     return result.to_table(max_rows=limit)
 
 

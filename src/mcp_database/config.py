@@ -38,6 +38,7 @@ class ServerConfig:
     max_rows: int = 100
     allow_writes: bool = False
     query_timeout: int = 30
+    mask_sensitive: bool = False
 
 
 def load_config_from_env() -> ServerConfig:
@@ -54,10 +55,11 @@ def load_config_from_env() -> ServerConfig:
     read_only = os.environ.get("MCP_DATABASE_READ_ONLY", "true").lower() in ("true", "1", "yes")
     max_rows = int(os.environ.get("MCP_MAX_ROWS", "100"))
     query_timeout = int(os.environ.get("MCP_QUERY_TIMEOUT", "30"))
+    mask_sensitive = os.environ.get("MCP_MASK_SENSITIVE", "false").lower() in ("true", "1", "yes")
 
     if db_url:
         config = _parse_url_to_config(db_url, db_type, read_only)
-        return ServerConfig(databases=[config], max_rows=max_rows, allow_writes=not read_only, query_timeout=query_timeout)
+        return ServerConfig(databases=[config], max_rows=max_rows, allow_writes=not read_only, query_timeout=query_timeout, mask_sensitive=mask_sensitive)
 
     # Default: in-memory SQLite for demo/testing
     return ServerConfig(
@@ -66,6 +68,7 @@ def load_config_from_env() -> ServerConfig:
         ],
         max_rows=max_rows,
         query_timeout=query_timeout,
+        mask_sensitive=mask_sensitive,
     )
 
 
@@ -79,6 +82,7 @@ def load_config_from_dict(data: dict) -> ServerConfig:
         max_rows=data.get("max_rows", 100),
         allow_writes=data.get("allow_writes", False),
         query_timeout=data.get("query_timeout", 30),
+        mask_sensitive=data.get("mask_sensitive", False),
     )
 
 
