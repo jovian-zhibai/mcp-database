@@ -85,6 +85,28 @@ class DatabaseAdapter(ABC):
         """Get the full database schema as formatted text."""
 
     @abstractmethod
+    def get_columns(self, table: str, database: str | None = None) -> list[dict]:
+        """Get column definitions for a table.
+
+        Returns list of dicts with keys: name, type, nullable, default, primary_key.
+        """
+
+    @abstractmethod
+    def get_indexes(self, table: str, database: str | None = None) -> list[dict]:
+        """Get index definitions for a table.
+
+        Returns list of dicts with keys: name, columns (list), unique.
+        """
+
+    @abstractmethod
+    def get_constraints(self, table: str, database: str | None = None) -> list[dict]:
+        """Get foreign key and check constraints for a table.
+
+        Returns list of dicts with keys: name, type (FK/CHECK), columns,
+        ref_table, ref_columns (for FK).
+        """
+
+    @abstractmethod
     def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
         """Execute a read-only SQL query."""
 

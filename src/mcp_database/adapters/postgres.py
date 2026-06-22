@@ -141,6 +141,94 @@ class PostgreSQLAdapter(DatabaseAdapter):
             parts.append(f"CREATE TABLE {table} (\n" + ",\n".join(col_lines) + "\n);")
         return "\n\n".join(parts) if parts else "No tables found."
 
+    def get_columns(self, table: str, database: str | None = None) -> list[dict]:
+        """Get column definitions from information_schema."""
+        conn = self._get_conn()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT column_name, data_type, is_nullable, column_default "
+            "FROM information_schema.columns "
+            "WHERE table_schema = 'public' AND table_name = %s "
+            "ORDER BY ordinal_position",
+            (table,),
+        )
+        rows = cur.fetchall()
+        # Get primary keys
+        cur.execute(
+            "SELECT a.attname FROM pg_index i "
+            "JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey) "
+            "WHERE i.indrelid = %s::regclass AND i.indisprimary",
+            (table,),
+        )
+        pk_cols = {r[0] for r in cur.fetchall()}
+        cur.close()
+
+        return [
+            {
+                "name": r[0],
+                "type": r[1],
+                "nullable": r[2] == "YES",
+                "default": r[3],
+                "primary_key": r[0] in pk_cols,
+            }
+            for r in rows
+        ]
+
+    def get_indexes(self, table: str, database: str | None = None) -> list[dict]:
+        """Get indexes from pg_indexes."""
+        conn = self._get_conn()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT indexname, indexdef FROM pg_indexes "
+            "WHERE tablename = %s AND schemaname = 'public' "
+            "AND indexname NOT LIKE '%_pkey'",
+            (table,),
+        )
+        rows = cur.fetchall()
+        cur.close()
+
+        result = []
+        for r in rows:
+            # Parse columns from indexdef (e.g., "CREATE UNIQUE INDEX ... ON t (col1, col2)")
+            import re
+            cols_match = re.search(r"\(([^)]+)\)", r[1])
+            cols = [c.strip() for c in cols_match.group(1).split(",")] if cols_match else []
+            result.append({
+                "name": r[0],
+                "columns": cols,
+                "unique": "UNIQUE" in r[1].upper(),
+            })
+        return result
+
+    def get_constraints(self, table: str, database: str | None = None) -> list[dict]:
+        """Get foreign key constraints from information_schema."""
+        conn = self._get_conn()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT kcu.column_name, ccu.table_name AS foreign_table_name, "
+            "ccu.column_name AS foreign_column_name, tc.constraint_name "
+            "FROM information_schema.table_constraints AS tc "
+            "JOIN information_schema.key_column_usage AS kcu "
+            "  ON tc.constraint_name = kcu.constraint_name "
+            "JOIN information_schema.constraint_column_usage AS ccu "
+            "  ON ccu.constraint_name = tc.constraint_name "
+            "WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name = %s",
+            (table,),
+        )
+        rows = cur.fetchall()
+        cur.close()
+
+        return [
+            {
+                "name": r[3],
+                "type": "FK",
+                "columns": [r[0]],
+                "ref_table": r[1],
+                "ref_columns": [r[2]],
+            }
+            for r in rows
+        ]
+
     def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
         conn = self._get_conn()
         cur = conn.cursor()
