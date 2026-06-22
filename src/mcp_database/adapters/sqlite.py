@@ -131,6 +131,50 @@ class SQLiteAdapter(DatabaseAdapter):
             for fk in fks
         ]
 
+    def get_health(self) -> dict:
+        import time
+
+        conn = self._get_conn()
+        start = time.monotonic()
+        conn.execute("SELECT 1")
+        latency = (time.monotonic() - start) * 1000
+
+        tables = self.list_tables()
+        tables_count = len(tables)
+        total_rows = 0
+        largest_tables: list[dict] = []
+
+        for table in tables:
+            rows = conn.execute(f"SELECT COUNT(*) FROM \"{table}\"").fetchone()[0]
+            total_rows += rows
+            largest_tables.append({"name": table, "rows": rows})
+
+        # Sort by rows descending, take top 5
+        largest_tables.sort(key=lambda x: x["rows"], reverse=True)
+        largest_tables = largest_tables[:5]
+
+        # Estimate size using page_count * page_size
+        page_count = conn.execute("PRAGMA page_count").fetchone()[0]
+        page_size = conn.execute("PRAGMA page_size").fetchone()[0]
+        estimated_size_bytes = page_count * page_size
+
+        # Distribute estimated size proportionally
+        for entry in largest_tables:
+            if total_rows > 0:
+                ratio = entry["rows"] / total_rows
+            else:
+                ratio = 1.0 / len(largest_tables) if largest_tables else 0
+            entry["estimated_size"] = f"{estimated_size_bytes * ratio / 1024:.1f} KB"
+
+        return {
+            "status": "healthy",
+            "database_type": self.db_type,
+            "tables_count": tables_count,
+            "total_rows": total_rows,
+            "largest_tables": largest_tables,
+            "connection_latency_ms": round(latency, 2),
+        }
+
     def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
         conn = self._get_conn()
         cursor = conn.execute(sql)

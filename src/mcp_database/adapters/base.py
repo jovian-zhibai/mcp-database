@@ -107,6 +107,14 @@ class DatabaseAdapter(ABC):
         """
 
     @abstractmethod
+    def get_health(self) -> dict:
+        """Get database health status.
+
+        Returns dict with keys: status, database_type, tables_count, total_rows,
+        largest_tables, connection_latency_ms.
+        """
+
+    @abstractmethod
     def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
         """Execute a read-only SQL query."""
 

@@ -282,6 +282,22 @@ def schema_diff(
     return json.dumps(result, indent=2, ensure_ascii=False)
 
 
+@mcp.tool()
+def check_health(
+    connection_name: str = "default",
+    ctx: Context = None,
+) -> str:
+    """Check database health: latency, table count, row count, largest tables.
+
+    Args:
+        connection_name: Name of the database connection (default: "default").
+    """
+    adapter = _get_adapter(ctx, connection_name)
+    result = adapter.get_health()
+    result["connection_name"] = connection_name
+    return json.dumps(result, indent=2, ensure_ascii=False)
+
+
 # ---------------------------------------------------------------------------
 # Resources
 # ---------------------------------------------------------------------------
