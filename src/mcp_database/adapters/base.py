@@ -122,6 +122,31 @@ class DatabaseAdapter(ABC):
         Returns the database's query plan as formatted text.
         """
 
+    def diagnose_connection(self) -> dict:
+        """Diagnose the connection with detailed status information.
+
+        Returns dict with keys: status, database_type, url, read_only,
+        server_version, ssl, latency_ms, tables_accessible, errors.
+
+        Default implementation provides basic diagnostics.
+        Adapters may override for richer output.
+        """
+        import time
+        result: dict = {
+            "status": "unknown",
+            "database_type": self.db_type,
+            "read_only": getattr(self, "read_only", True),
+        }
+        try:
+            start = time.monotonic()
+            ok = self.test_connection()
+            result["latency_ms"] = round((time.monotonic() - start) * 1000, 2)
+            result["status"] = "connected" if ok else "disconnected"
+        except Exception as e:
+            result["status"] = "failed"
+            result.setdefault("errors", []).append(str(e))
+        return result
+
     @abstractmethod
     def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100, timeout: int = 30) -> QueryResult:
         """Execute a read-only SQL query."""

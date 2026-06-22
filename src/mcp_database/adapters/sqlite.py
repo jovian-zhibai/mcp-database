@@ -184,6 +184,53 @@ class SQLiteAdapter(DatabaseAdapter):
             lines.append(f"{r['id']}|{r['parent']}|{r['notused']}|{r['detail']}")
         return "\n".join(lines) if lines else "No plan available."
 
+    def diagnose_connection(self) -> dict:
+        import os
+        import time
+
+        result = {
+            "status": "unknown",
+            "database_type": self.db_type,
+            "read_only": self.read_only,
+            "ssl": False,
+            "errors": [],
+        }
+
+        # Check file existence
+        if self.database_path not in (":memory:", ""):
+            exists = os.path.exists(self.database_path)
+            result["url"] = f"sqlite:///{self.database_path} (file exists: {exists}"
+            if exists:
+                size = os.path.getsize(self.database_path)
+                result["url"] += f", size: {size / (1024*1024):.1f}MB)"
+            else:
+                result["url"] += ")"
+                result["errors"].append(
+                    f"Database file not found: {self.database_path}. "
+                    "Create it with sqlite3 {self.database_path} or use :memory:."
+                )
+                result["status"] = "failed"
+                return result
+        else:
+            result["url"] = "sqlite:///:memory:"
+
+        # Try connection
+        try:
+            if not self._conn:
+                self.connect()
+            start = time.monotonic()
+            self._conn.execute("SELECT 1")
+            result["latency_ms"] = round((time.monotonic() - start) * 1000, 2)
+            result["server_version"] = self._conn.execute("SELECT sqlite_version()").fetchone()[0]
+            result["status"] = "connected"
+            result["tables_accessible"] = True
+        except Exception as e:
+            result["status"] = "failed"
+            result["errors"].append(str(e))
+            result["tables_accessible"] = False
+
+        return result
+
     def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100, timeout: int = 30) -> QueryResult:
         conn = self._get_conn()
         timer = threading.Timer(timeout, conn.interrupt)

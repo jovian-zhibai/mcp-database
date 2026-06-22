@@ -254,6 +254,52 @@ class MySQLAdapter(DatabaseAdapter):
             return json.dumps(list(row.values())[0], indent=2, ensure_ascii=False)
         return "No plan available."
 
+    def diagnose_connection(self) -> dict:
+        import time
+
+        masked_url = f"mysql://{self.user}:***@{self.host}:{self.port}/{self.default_database}"
+
+        result = {
+            "status": "unknown",
+            "database_type": self.db_type,
+            "url": masked_url,
+            "read_only": self.read_only,
+            "ssl": False,
+            "errors": [],
+            "tables_accessible": False,
+        }
+
+        try:
+            if not self._conn:
+                self.connect()
+        except Exception as e:
+            msg = str(e)
+            hints = []
+            if "can't connect" in msg.lower() or "connection refused" in msg.lower():
+                hints.append(f"Connection refused — is MySQL running on {self.host}:{self.port}?")
+                hints.append("Hint: Check if the host is reachable and the port is correct")
+            elif "access denied" in msg.lower():
+                hints.append("Authentication failed — check username and password")
+            result["status"] = "failed"
+            result["errors"] = [msg] + hints
+            return result
+
+        try:
+            cur = self._conn.cursor()
+            start = time.monotonic()
+            cur.execute("SELECT 1")
+            result["latency_ms"] = round((time.monotonic() - start) * 1000, 2)
+            cur.execute("SELECT VERSION()")
+            result["server_version"] = cur.fetchone()["VERSION()"]
+            cur.close()
+            result["status"] = "connected"
+            result["tables_accessible"] = True
+        except Exception as e:
+            result["status"] = "failed"
+            result["errors"].append(str(e))
+
+        return result
+
     def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100, timeout: int = 30) -> QueryResult:
         conn = self._get_conn()
         cur = conn.cursor()

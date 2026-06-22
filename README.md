@@ -69,6 +69,46 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
+### Cursor Integration
+
+Add to your Cursor MCP settings (Settings → MCP):
+
+```json
+{
+  "mcpServers": {
+    "database": {
+      "command": "mcp-database",
+      "env": {
+        "MCP_DATABASE_URL": "sqlite:///path/to/your.db"
+      }
+    }
+  }
+}
+```
+
+### Windsurf Integration
+
+Add to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "database": {
+      "command": "mcp-database",
+      "env": {
+        "MCP_DATABASE_URL": "sqlite:///path/to/your.db"
+      }
+    }
+  }
+}
+```
+
+### Other MCP-Compatible Tools
+
+mcp-database works with any tool that supports the MCP protocol.
+The configuration pattern is the same: point the tool to the
+`mcp-database` command and set `MCP_DATABASE_URL`.
+
 ## Supported Databases
 
 | Database | Status | Install |
@@ -76,6 +116,7 @@ Add to your `claude_desktop_config.json`:
 | **SQLite** | Built-in | `pip install mcp-database` |
 | **PostgreSQL** | Optional | `pip install 'mcp-database[postgres]'` |
 | **MySQL** | Optional | `pip install 'mcp-database[mysql]'` |
+| **MongoDB** | Preview | `pip install 'mcp-database[mongodb]'` |
 | **All** | Optional | `pip install 'mcp-database[all]'` |
 
 ## Configuration
@@ -146,6 +187,7 @@ Once connected, Claude can use these tools:
 | `check_health` | Get database health metrics (table count, row counts, latency) |
 | `generate_er_diagram` | Generate Mermaid ER diagram from database schema |
 | `explain_query` | Explain the execution plan for a SELECT query |
+| `diagnose_connection` | Diagnose connection issues with troubleshooting hints |
 
 ## Examples
 
@@ -168,6 +210,22 @@ Ask Claude things like:
 - **Row limits** — configurable max rows to prevent accidental large result sets
 - **Query timeout** — configurable timeout (default 30s) to prevent slow queries from blocking
 - **Data masking** — optionally mask sensitive columns (emails, phones, tokens) with `MCP_MASK_SENSITIVE=true`
+
+## Integration with Mergewall
+
+Use mcp-database as the storage backend for
+[Mergewall](https://github.com/jovian-zhibai/Mergewall) audit data:
+
+```bash
+# 1. Create audit database
+MCP_DATABASE_URL=sqlite:///mergewall-audit.db mcp-database
+
+# 2. Ask Claude: "Create the mergewall_audit table using the schema resource"
+# 3. Configure Mergewall to export audit data
+#    (See Mergewall docs for database export configuration)
+```
+
+This gives you SQL-queryable governance history instead of flat JSONL files.
 
 ## Development
 

@@ -4,3 +4,5 @@ from mcp_database.adapters.base import DatabaseAdapter
 from mcp_database.adapters.sqlite import SQLiteAdapter
 
 __all__ = ["DatabaseAdapter", "SQLiteAdapter"]
+
+# MongoDB adapter is loaded lazily (requires pymongo)
