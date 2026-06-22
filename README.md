@@ -128,6 +128,7 @@ Once connected, Claude can use these tools:
 | `schema_diff` | Compare schemas between two database connections |
 | `check_health` | Get database health metrics (table count, row counts, latency) |
 | `generate_er_diagram` | Generate Mermaid ER diagram from database schema |
+| `explain_query` | Explain the execution plan for a SELECT query |
 
 ## Examples
 

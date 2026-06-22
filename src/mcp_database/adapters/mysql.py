@@ -243,6 +243,17 @@ class MySQLAdapter(DatabaseAdapter):
             "connection_latency_ms": round(latency, 2),
         }
 
+    def explain(self, query: str) -> str:
+        conn = self._get_conn()
+        cur = conn.cursor()
+        cur.execute(f"EXPLAIN FORMAT=JSON {query}")
+        row = cur.fetchone()
+        cur.close()
+        if row:
+            import json
+            return json.dumps(list(row.values())[0], indent=2, ensure_ascii=False)
+        return "No plan available."
+
     def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
         conn = self._get_conn()
         cur = conn.cursor()

@@ -315,6 +315,27 @@ def generate_er_diagram(
     return _generate_er_diagram(adapter, format=format)
 
 
+@mcp.tool()
+def explain_query(
+    query: str,
+    connection_name: str = "default",
+    ctx: Context = None,
+) -> str:
+    """Explain the execution plan for a SELECT query.
+
+    Args:
+        query: SQL SELECT or WITH...SELECT statement to explain.
+        connection_name: Name of the database connection (default: "default").
+    """
+    # Security: only allow SELECT-like queries
+    normalized = query.strip().upper()
+    if not (normalized.startswith("SELECT") or normalized.startswith("WITH")):
+        return "Error: Only SELECT or WITH...SELECT queries can be explained."
+
+    adapter = _get_adapter(ctx, connection_name)
+    return adapter.explain(query.strip().rstrip(";"))
+
+
 # ---------------------------------------------------------------------------
 # Resources
 # ---------------------------------------------------------------------------

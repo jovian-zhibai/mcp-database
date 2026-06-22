@@ -130,6 +130,7 @@ MCP_DATABASE_TYPE=mysql
 | `schema_diff` | 比较两个数据库连接之间的表结构差异 |
 | `check_health` | 获取数据库健康指标（表数量、行数、延迟） |
 | `generate_er_diagram` | 从数据库结构生成 Mermaid ER 图 |
+| `explain_query` | 解释 SELECT 查询的执行计划 |
 
 ## 使用示例
 
