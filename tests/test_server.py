@@ -14,6 +14,7 @@ REQUIRED_TOOLS = {
     "execute",
     "sample_rows",
     "search_tables",
+    "schema_diff",
 }
 
 
@@ -62,6 +63,11 @@ def server_instance():
         """Search tables."""
         return "ok"
 
+    @server.tool()
+    def schema_diff(source_connection: str, target_connection: str, table_name: str = "") -> str:
+        """Schema diff."""
+        return "ok"
+
     return server
 
 
@@ -78,7 +84,7 @@ class TestToolRegistration:
     @pytest.mark.anyio
     async def test_exact_tool_count(self, server_instance):
         tools = await server_instance.list_tools()
-        assert len(tools) == 8, f"Expected 8 tools, got {len(tools)}: {[t.name for t in tools]}"
+        assert len(tools) == 9, f"Expected 9 tools, got {len(tools)}: {[t.name for t in tools]}"
 
     @pytest.mark.anyio
     async def test_list_databases_has_schema(self, server_instance):
@@ -115,6 +121,12 @@ class TestToolRegistration:
         tools = await server_instance.list_tools()
         tool = next(t for t in tools if t.name == "search_tables")
         assert tool.name == "search_tables"
+
+    @pytest.mark.anyio
+    async def test_schema_diff_registered(self, server_instance):
+        tools = await server_instance.list_tools()
+        tool = next(t for t in tools if t.name == "schema_diff")
+        assert tool.name == "schema_diff"
 
 
 class TestServerModuleImports:

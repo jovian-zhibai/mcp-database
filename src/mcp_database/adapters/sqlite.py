@@ -90,6 +90,47 @@ class SQLiteAdapter(DatabaseAdapter):
             parts.append(f"CREATE TABLE {table} (\n" + ",\n".join(col_lines) + "\n);")
         return "\n\n".join(parts) if parts else "No tables found."
 
+    def get_columns(self, table: str, database: str | None = None) -> list[dict]:
+        conn = self._get_conn()
+        rows = conn.execute(f"PRAGMA table_info('{table}')").fetchall()
+        return [
+            {
+                "name": r["name"],
+                "type": r["type"],
+                "nullable": not r["notnull"],
+                "default": r["dflt_value"],
+                "primary_key": bool(r["pk"]),
+            }
+            for r in rows
+        ]
+
+    def get_indexes(self, table: str, database: str | None = None) -> list[dict]:
+        conn = self._get_conn()
+        indexes = conn.execute(f"PRAGMA index_list('{table}')").fetchall()
+        result = []
+        for idx in indexes:
+            cols = conn.execute(f"PRAGMA index_info('{idx['name']}')").fetchall()
+            result.append({
+                "name": idx["name"],
+                "columns": [c["name"] for c in cols] if cols else [],
+                "unique": bool(idx["unique"]),
+            })
+        return result
+
+    def get_constraints(self, table: str, database: str | None = None) -> list[dict]:
+        conn = self._get_conn()
+        fks = conn.execute(f"PRAGMA foreign_key_list('{table}')").fetchall()
+        return [
+            {
+                "name": f"fk_{fk['from']}_to_{fk['table']}_{fk['to']}",
+                "type": "FK",
+                "columns": [fk["from"]],
+                "ref_table": fk["table"],
+                "ref_columns": [fk["to"]],
+            }
+            for fk in fks
+        ]
+
     def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
         conn = self._get_conn()
         cursor = conn.execute(sql)

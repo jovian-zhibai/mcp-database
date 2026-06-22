@@ -16,6 +16,7 @@ from mcp.server.fastmcp import Context, FastMCP
 
 from mcp_database.adapters.base import DatabaseAdapter
 from mcp_database.connection_manager import ConnectionManager
+from mcp_database.schema_diff import diff_schemas
 
 logger = logging.getLogger(__name__)
 
@@ -253,6 +254,32 @@ def search_tables(
                 matches.append(f"  {table_name}.{col['name']} ({col['type']})")
 
     return "\n".join(matches) if matches else f"No matches for '{keyword}'."
+
+
+@mcp.tool()
+def schema_diff(
+    source_connection: str,
+    target_connection: str,
+    table_name: str = "",
+    ctx: Context = None,
+) -> str:
+    """Compare schemas between two database connections.
+
+    Args:
+        source_connection: Source connection name.
+        target_connection: Target connection name.
+        table_name: Optional table name to diff. If empty, diff all tables.
+    """
+    cm = _get_manager(ctx)
+    source = cm.get(source_connection)
+    target = cm.get(target_connection)
+
+    result = diff_schemas(
+        source,
+        target,
+        table_name=table_name if table_name else None,
+    )
+    return json.dumps(result, indent=2, ensure_ascii=False)
 
 
 # ---------------------------------------------------------------------------

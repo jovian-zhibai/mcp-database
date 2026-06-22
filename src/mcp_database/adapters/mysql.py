@@ -136,6 +136,76 @@ class MySQLAdapter(DatabaseAdapter):
                 parts.append(f"CREATE TABLE {table} (\n" + ",\n".join(col_lines) + "\n);")
         return "\n\n".join(parts) if parts else "No tables found."
 
+    def get_columns(self, table: str, database: str | None = None) -> list[dict]:
+        """Get column definitions via DESCRIBE."""
+        conn = self._get_conn()
+        cur = conn.cursor()
+        table_ref = f"`{database}`.`{table}`" if database else f"`{table}`"
+        cur.execute(f"DESCRIBE {table_ref}")
+        rows = cur.fetchall()
+        cur.close()
+
+        return [
+            {
+                "name": r["Field"],
+                "type": r["Type"],
+                "nullable": r["Null"] == "YES",
+                "default": r["Default"],
+                "primary_key": r["Key"] == "PRI",
+            }
+            for r in rows
+        ]
+
+    def get_indexes(self, table: str, database: str | None = None) -> list[dict]:
+        """Get indexes via SHOW INDEX."""
+        conn = self._get_conn()
+        cur = conn.cursor()
+        table_ref = f"`{database}`.`{table}`" if database else f"`{table}`"
+        cur.execute(f"SHOW INDEX FROM {table_ref}")
+        rows = cur.fetchall()
+        cur.close()
+
+        # Group by index name
+        idx_map: dict[str, dict] = {}
+        for r in rows:
+            name = r["Key_name"]
+            if name == "PRIMARY":
+                continue
+            if name not in idx_map:
+                idx_map[name] = {
+                    "name": name,
+                    "columns": [],
+                    "unique": not r["Non_unique"],
+                }
+            idx_map[name]["columns"].append(r["Column_name"])
+
+        return list(idx_map.values())
+
+    def get_constraints(self, table: str, database: str | None = None) -> list[dict]:
+        """Get foreign keys from information_schema."""
+        conn = self._get_conn()
+        cur = conn.cursor()
+        db_filter = database or self.default_database
+        cur.execute(
+            "SELECT column_name, referenced_table_name, referenced_column_name, constraint_name "
+            "FROM information_schema.key_column_usage "
+            "WHERE table_name = %s AND table_schema = %s AND referenced_table_name IS NOT NULL",
+            (table, db_filter),
+        )
+        rows = cur.fetchall()
+        cur.close()
+
+        return [
+            {
+                "name": r["constraint_name"] or f"fk_{r['column_name']}",
+                "type": "FK",
+                "columns": [r["column_name"]],
+                "ref_table": r["referenced_table_name"],
+                "ref_columns": [r["referenced_column_name"]],
+            }
+            for r in rows
+        ]
+
     def execute_query(self, sql: str, database: str | None = None, max_rows: int = 100) -> QueryResult:
         conn = self._get_conn()
         cur = conn.cursor()
